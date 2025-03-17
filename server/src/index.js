@@ -34,7 +34,8 @@ app.get('/test', (req, res) => {
   res.json({ 
     message: 'Server is running successfully!',
     environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
@@ -47,27 +48,6 @@ app.use('/api/tabla', tablaRouter);
 app.use('/api/players', playerRouter);
 app.use('/api/knockout', knockoutRouter);
 
-// Environment variables
-const PORT = process.env.PORT || 3001;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freestyle_app';
-
-// Connect to MongoDB
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('Connected to MongoDB');
-  // Start server only after successful database connection
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-})
-.catch((error) => {
-  console.error('MongoDB connection error:', error);
-  process.exit(1);
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -75,4 +55,49 @@ app.use((err, req, res, next) => {
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
+});
+
+// Environment variables
+const PORT = process.env.PORT || 3001;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freestyle_app';
+
+// Start server first
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Connect to MongoDB
+console.log('Attempting to connect to MongoDB...');
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+})
+.then(() => {
+  console.log('Connected to MongoDB successfully');
+})
+.catch((error) => {
+  console.error('MongoDB connection error:', error);
+  // Don't exit the process, let the server run without DB
+  console.log('Server will continue running without database connection');
+});
+
+// Handle process termination
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Keep the server running
+  console.log('Server will continue running after uncaught exception');
 }); 

@@ -5,5 +5,7 @@ buildCommand = "cd server && npm install"
 [deploy]
 startCommand = "cd server && npm start"
 healthcheckPath = "/test"
-healthcheckTimeout = 100
-restartPolicyType = "on_failure" 
+healthcheckTimeout = 300
+healthcheckInterval = 10
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5 
