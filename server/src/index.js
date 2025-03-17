@@ -31,7 +31,11 @@ if (!fs.existsSync(uploadsDir)){
 // Add a test route to verify the server is running
 app.get('/test', (req, res) => {
   console.log('Test endpoint hit!');
-  res.json({ message: 'Server is running!' });
+  res.json({ 
+    message: 'Server is running successfully!',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Serve uploaded files
