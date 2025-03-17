@@ -71,6 +71,8 @@ async function initializeApp() {
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      retryWrites: true,
+      w: 'majority'
     });
     
     console.log('MongoDB connection successful!');
