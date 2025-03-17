@@ -17,8 +17,28 @@ app.get('/test', (req, res) => {
   });
 });
 
+// Validate and parse PORT
+const validatePort = (port) => {
+  const parsedPort = parseInt(port, 10);
+  if (isNaN(parsedPort)) {
+    throw new Error(`Invalid PORT: ${port} - Must be a number`);
+  }
+  if (parsedPort < 0 || parsedPort > 65535) {
+    throw new Error(`Invalid PORT: ${port} - Must be between 0 and 65535`);
+  }
+  return parsedPort;
+};
+
 // Environment variables with detailed logging
-const PORT = process.env.PORT || 3001;
+let PORT;
+try {
+  PORT = validatePort(process.env.PORT || 3001);
+} catch (error) {
+  console.error('Port validation failed:', error.message);
+  console.log('Falling back to default port 3001');
+  PORT = 3001;
+}
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freestyle_app';
 
 console.log('Starting server with configuration:');
