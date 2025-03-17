@@ -6,21 +6,30 @@ const app = express();
 // Basic middleware
 app.use(express.json());
 
-// Minimal test route for healthcheck
+// Initial test route for basic healthcheck
 app.get('/test', (req, res) => {
-  console.log('Healthcheck endpoint hit!');
+  console.log('Basic healthcheck endpoint hit!');
   res.json({ 
     status: 'ok',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    message: 'Server is running. Database connection pending.',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// Environment variables
+// Environment variables with detailed logging
 const PORT = process.env.PORT || 3001;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freestyle_app';
+
+console.log('Starting server with configuration:');
+console.log(`- PORT: ${PORT}`);
+console.log(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+console.log(`- MONGODB_URI: ${MONGODB_URI.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://[username]:[password]@')}`);
 
 // Start server first with minimal setup
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Test endpoint available at: http://localhost:${PORT}/test`);
   
   // Initialize the rest of the application after server is running
   initializeApp().catch(err => {
@@ -53,9 +62,8 @@ async function initializeApp() {
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-  // Connect to MongoDB
+  // Connect to MongoDB with detailed error handling
   console.log('Attempting to connect to MongoDB...');
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freestyle_app';
   
   try {
     await mongoose.connect(MONGODB_URI, {
@@ -64,7 +72,10 @@ async function initializeApp() {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    console.log('Connected to MongoDB successfully');
+    
+    console.log('MongoDB connection successful!');
+    console.log('Database name:', mongoose.connection.name);
+    console.log('MongoDB version:', await mongoose.connection.db.admin().serverInfo().then(info => info.version));
     
     // Load routes only after DB connection
     const eventRoutes = require('./routes/events');
@@ -78,26 +89,50 @@ async function initializeApp() {
     app.use('/api/players', playerRouter);
     app.use('/api/knockout', knockoutRouter);
 
-    // Update test route with more info
+    // Update test route with detailed status
     app.get('/test', (req, res) => {
-      console.log('Test endpoint hit!');
+      console.log('Detailed test endpoint hit!');
       res.json({ 
         status: 'ok',
         message: 'Server is fully initialized!',
         environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString(),
-        mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        database: {
+          status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+          name: mongoose.connection.name,
+          host: mongoose.connection.host,
+          port: mongoose.connection.port
+        },
+        server: {
+          uptime: process.uptime(),
+          nodeVersion: process.version,
+          platform: process.platform
+        }
       });
     });
 
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    console.log('Server will continue running without database connection');
+    console.error('MongoDB connection error details:');
+    console.error('- Error name:', error.name);
+    console.error('- Error message:', error.message);
+    console.error('- Error code:', error.code);
+    console.error('- Full error:', error);
+    
+    // Update test route with error status
+    app.get('/test', (req, res) => {
+      res.json({ 
+        status: 'partial',
+        message: 'Server is running but database connection failed',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Database connection error',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+      });
+    });
   }
 
   // Error handling middleware
   app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Global error handler caught:', err);
     res.status(500).json({ 
       message: 'Something went wrong!',
       error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
