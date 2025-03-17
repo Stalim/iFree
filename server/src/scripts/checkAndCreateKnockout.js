@@ -22,7 +22,7 @@ const knockoutTemplates = {
             competitor1: {
               id: 'aczino',
               name: 'Aczino',
-              flag: '🇲🇽',
+              flag: '',
               imageUrl: '/uploads/aczino.jpg'
             },
             competitor2: {

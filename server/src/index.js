@@ -43,53 +43,32 @@ app.use('/api/tabla', tablaRouter);
 app.use('/api/players', playerRouter);
 app.use('/api/knockout', knockoutRouter);
 
-// MongoDB connection options
-const mongooseOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-};
+// Environment variables
+const PORT = process.env.PORT || 3001;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freestyle_app';
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, mongooseOptions)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    // Only start the server after successful database connection
-    const PORT = process.env.PORT || 3000;
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      const address = server.address();
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Server bound to ${address.address}:${address.port}`);
-      console.log(`Test the API at: http://localhost:${PORT}/test`);
-      console.log(`Events API at: http://localhost:${PORT}/api/events`);
-      console.log(`Players API at: http://localhost:${PORT}/api/players`);
-      console.log('Available on your network at:');
-      require('os').networkInterfaces()['Wi-Fi']?.forEach(interface => {
-        if (interface.family === 'IPv4') {
-          console.log(`  http://${interface.address}:${PORT}`);
-        }
-      });
-    });
-
-    server.on('error', (error) => {
-      console.error('Server error:', error);
-      if (error.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use`);
-      }
-    });
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log('Connected to MongoDB');
+  // Start server only after successful database connection
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
+})
+.catch((error) => {
+  console.error('MongoDB connection error:', error);
+  process.exit(1);
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error occurred:', err);
-  console.error('Stack trace:', err.stack);
+  console.error(err.stack);
   res.status(500).json({ 
     message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 }); 
