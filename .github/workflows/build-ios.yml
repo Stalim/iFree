@@ -83,7 +83,12 @@ jobs:
               },
               "plugins": [
                 "expo-router"
-              ]
+              ],
+              "extra": {
+                "eas": {
+                  "projectId": "1f9aded8-37c1-4839-b80b-7a7ac1443977"
+                }
+              }
             }
           }' > app.json
 
@@ -96,11 +101,8 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: 1
         run: |
-          # Initialize EAS project with --non-interactive flag and force flag
-          yes | npx eas init --non-interactive --force
-
-          # Configure project
-          npx eas project:configure
+          # Initialize EAS project with --non-interactive flag
+          npx eas init --id 1f9aded8-37c1-4839-b80b-7a7ac1443977 --non-interactive
 
           # Build with preview profile
           npx eas build --platform ios --profile preview --non-interactive --no-wait
