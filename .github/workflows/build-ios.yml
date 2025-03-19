@@ -114,12 +114,14 @@ jobs:
       - name: Generate native iOS code
         env:
           CI: 1
+          EXPO_NO_INTERACTIVE: 1
+          NPM_CONFIG_YES: true
         run: |
           # Generate iOS native code
-          npx expo prebuild -p ios --clean --yes
+          npx expo prebuild -p ios --clean
           
-          # Install any updated dependencies
-          npm install
+          # Force update dependencies
+          npm install --force
           
       - name: Install iOS dependencies
         run: |
