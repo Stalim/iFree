@@ -112,9 +112,14 @@ jobs:
           echo "{ \"sessionSecret\": \"$EXPO_TOKEN\" }" > ~/.expo/state.json
           
       - name: Generate native iOS code
+        env:
+          CI: 1
         run: |
           # Generate iOS native code
-          npx expo prebuild -p ios --clean
+          npx expo prebuild -p ios --clean --yes
+          
+          # Install any updated dependencies
+          npm install
           
       - name: Install iOS dependencies
         run: |
