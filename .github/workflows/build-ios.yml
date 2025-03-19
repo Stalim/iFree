@@ -99,22 +99,17 @@ jobs:
               },
               "plugins": [
                 "expo-router"
-              ],
-              "extra": {
-                "eas": {
-                  "projectId": "1f9aded8-37c1-4839-b80b-7a7ac1443977"
-                }
-              }
+              ]
             }
           }' > app.json
           
-      - name: Create Expo credentials
+      - name: Login to Expo
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: 1
         run: |
-          # Login to Expo
-          echo "EXPO_TOKEN=$EXPO_TOKEN" > .env
-          npx expo login --non-interactive
+          # Login to Expo using environment variable
+          npx expo login
           
       - name: Generate native iOS code
         run: |
