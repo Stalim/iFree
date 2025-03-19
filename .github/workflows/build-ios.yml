@@ -52,6 +52,22 @@ jobs:
               }
             }' > app.json
           fi
+
+          # Create or update eas.json if it doesn't exist
+          if [ ! -f eas.json ]; then
+            echo '{
+              "cli": {
+                "version": ">= 3.13.3"
+              },
+              "build": {
+                "preview": {
+                  "ios": {
+                    "simulator": true
+                  }
+                }
+              }
+            }' > eas.json
+          fi
           
       # Note: You need to set up EXPO_TOKEN in your repository secrets
       # Go to your GitHub repo -> Settings -> Secrets and Variables -> Actions -> New repository secret
@@ -71,11 +87,11 @@ jobs:
           # The EXPO_TOKEN environment variable will be automatically used for authentication
           # No need for explicit login as EAS CLI will use the token automatically
 
-          # Configure EAS project if needed
-          npx eas-cli configure --platform ios
+          # Initialize EAS build if needed
+          npx eas build:configure
 
           # Build with preview profile
-          eas build --platform ios --profile preview --non-interactive
+          npx eas build --platform ios --profile preview --non-interactive --no-wait
         
       - name: Get Build URL
         run: echo "Check the logs above for your build URL. Once the build completes, you can download the IPA from the Expo dashboard." 
