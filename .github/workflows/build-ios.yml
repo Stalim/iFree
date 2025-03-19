@@ -33,6 +33,9 @@ jobs:
           # Install expo-router and related packages
           npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar
           
+          # Install ImageMagick
+          brew install imagemagick
+          
           # Install cocoapods
           gem install cocoapods
       
@@ -40,6 +43,34 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: 'latest-stable'
+          
+      - name: Create assets directory and placeholder images
+        run: |
+          # Create assets directory
+          mkdir -p assets
+          
+          # Create placeholder icon (1024x1024 transparent PNG)
+          convert -size 1024x1024 xc:transparent \
+            -fill '#0f2167' \
+            -draw 'circle 512,512 512,256' \
+            -font Arial -pointsize 200 -fill white \
+            -gravity center -annotate 0 'iF' \
+            assets/icon.png
+            
+          # Create adaptive icon (108x108 transparent PNG)
+          cp assets/icon.png assets/adaptive-icon.png
+          
+          # Create splash screen (2048x2048 white PNG with logo)
+          convert -size 2048x2048 xc:white \
+            -fill '#0f2167' \
+            -draw 'circle 1024,1024 1024,512' \
+            -font Arial -pointsize 400 -fill white \
+            -gravity center -annotate 0 'iF' \
+            assets/splash.png
+            
+          # Create favicon (64x64 transparent PNG)
+          cp assets/icon.png assets/favicon.png
+          convert assets/favicon.png -resize 64x64 assets/favicon.png
           
       - name: Setup EAS
         run: |
