@@ -30,7 +30,8 @@ jobs:
           # Create necessary configuration files
           echo '{
             "cli": {
-              "version": ">= 3.13.3"
+              "version": ">= 3.13.3",
+              "appVersionSource": "remote"
             },
             "build": {
               "development": {
@@ -82,7 +83,12 @@ jobs:
               },
               "plugins": [
                 "expo-router"
-              ]
+              ],
+              "extra": {
+                "eas": {
+                  "projectId": "your-project-id"
+                }
+              }
             }
           }' > app.json
 
@@ -90,11 +96,14 @@ jobs:
           npm install -g eas-cli
           
       # Set CI environment variable and use it for Expo build
-      - name: Build iOS App
+      - name: Initialize and Build iOS App
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: 1
         run: |
+          # Initialize EAS project
+          npx eas init --non-interactive
+
           # Build with preview profile
           npx eas build --platform ios --profile preview --non-interactive --no-wait
         
