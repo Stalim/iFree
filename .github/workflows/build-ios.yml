@@ -106,10 +106,10 @@ jobs:
       - name: Login to Expo
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          CI: 1
         run: |
-          # Login to Expo using environment variable
-          npx expo login
+          # Create Expo token file
+          mkdir -p ~/.expo
+          echo "{ \"sessionSecret\": \"$EXPO_TOKEN\" }" > ~/.expo/state.json
           
       - name: Generate native iOS code
         run: |
