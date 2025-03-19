@@ -234,13 +234,21 @@ To enable GitHub Actions to build your app, you need to set up an Expo token:
 
 When you push code to the repository, GitHub Actions will:
 
-1. Set up a macOS environment
-2. Install Node.js and dependencies
-3. Install Expo and EAS CLI
-4. Configure the EAS build
-5. Log in to Expo using your token
-6. Build the IPA file
-7. You can download the IPA file from the build logs or from your Expo dashboard
+1. Set up a macOS environment with Node.js 16
+2. Install project dependencies
+3. Install EAS CLI
+4. Configure Expo authentication with your token
+5. Build the IPA file using the "preview" profile in your eas.json
+6. Provide a build URL in the logs
+
+### Troubleshooting
+
+If you encounter build issues:
+
+1. Verify your EXPO_TOKEN is correctly set up in GitHub Secrets
+2. Make sure your eas.json file has a "preview" profile
+3. Check that your app.json is properly configured
+4. Review the full build logs in the GitHub Actions tab
 
 ### Downloading Your IPA
 
