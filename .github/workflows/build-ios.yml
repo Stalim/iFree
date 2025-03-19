@@ -1,4 +1,4 @@
-name: iOS Build
+name: Local iOS Build
 on: [push]
 jobs:
   build-ios:
@@ -13,17 +13,33 @@ jobs:
           node-version: 18
           cache: 'npm'
           
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+          
       - name: Install dependencies
         run: |
           # Install base dependencies
           npm install
 
-          # Install expo CLI and core packages
+          # Install Expo CLI and related packages
           npm install expo@latest
-          npm install -g expo-cli
-
+          npm install -g expo-cli@latest
+          npm install -g @expo/cli@latest
+          npm install -g sharp-cli
+          
           # Install expo-router and related packages
           npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar
+          
+          # Install cocoapods
+          gem install cocoapods
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
           
       - name: Setup EAS
         run: |
@@ -91,21 +107,41 @@ jobs:
               }
             }
           }' > app.json
-
-          # Install EAS CLI
-          npm install -g eas-cli
           
-      # Set CI environment variable and use it for Expo build
-      - name: Initialize and Build iOS App
+      - name: Create Expo credentials
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          CI: 1
         run: |
-          # Initialize EAS project with --non-interactive flag
-          npx eas init --id 1f9aded8-37c1-4839-b80b-7a7ac1443977 --non-interactive
-
-          # Build with preview profile
-          npx eas build --platform ios --profile preview --non-interactive --no-wait
-        
-      - name: Get Build URL
-        run: echo "Check the logs above for your build URL. Once the build completes, you can download the IPA from the Expo dashboard." 
+          # Login to Expo
+          echo "EXPO_TOKEN=$EXPO_TOKEN" > .env
+          npx expo login --non-interactive
+          
+      - name: Generate native iOS code
+        run: |
+          # Generate iOS native code
+          npx expo prebuild -p ios --clean
+          
+      - name: Install iOS dependencies
+        run: |
+          # Install iOS dependencies
+          cd ios && pod install && cd ..
+          
+      - name: Build iOS app
+        run: |
+          # Build the iOS app
+          cd ios
+          xcodebuild -workspace iFree.xcworkspace -scheme iFree -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' EXCLUDED_ARCHS=arm64
+          cd ..
+          
+      - name: Archive and upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: |
+            ios/build/Build/Products/Release-iphonesimulator
+            
+      - name: Build Summary
+        run: |
+          echo "### iOS Build Complete! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "The build has been completed and uploaded as an artifact." >> $GITHUB_STEP_SUMMARY
+          echo "To download, go to the Actions tab, select this workflow run, and download the ios-build artifact." >> $GITHUB_STEP_SUMMARY 
