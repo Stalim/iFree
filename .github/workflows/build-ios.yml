@@ -15,7 +15,14 @@ jobs:
           
       - name: Install dependencies
         run: |
+          # Install base dependencies
           npm install
+
+          # Install expo CLI and core packages
+          npm install expo@latest
+          npm install -g expo-cli
+
+          # Install expo-router and related packages
           npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar
           
       - name: Verify expo-router setup
