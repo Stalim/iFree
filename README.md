@@ -208,65 +208,76 @@ For issues or questions:
 3. Ensure all required fields are provided
 4. Contact support if problem persists
 
-# Freestyle App
+# iFree App
 
-A mobile application for freestyle rap battle events and leagues.
+A mobile application for freestyle rap events and tournaments.
 
-## GitHub Actions Setup for iOS Builds
+## Building the iOS App with GitHub Actions
 
-This repository is configured to automatically build iOS IPA files using GitHub Actions when you push code to the repository. This allows you to bypass the EAS build limits on free accounts.
+This repository is configured to build the iOS app automatically using GitHub Actions, bypassing the Expo EAS build service limits.
 
-### Setting up Expo Token
+### How it Works
 
-To enable GitHub Actions to build your app, you need to set up an Expo token:
+1. **Local Build on GitHub Runners**: Instead of using Expo's build service (which has monthly limits on the free tier), the workflow builds the app directly on GitHub's macOS runners.
 
-1. Go to [Expo Access Tokens](https://expo.dev/settings/access-tokens)
-2. Create a new token with a descriptive name (e.g., "GitHub Actions")
-3. Copy the token
-4. Go to your GitHub repository
-5. Navigate to Settings > Secrets and Variables > Actions
-6. Click on "New repository secret"
-7. Name: `EXPO_TOKEN`
-8. Value: Paste your Expo token
-9. Click "Add secret"
+2. **The Process**:
+   - Checks out the repository code
+   - Sets up Node.js, Ruby, and Xcode environments
+   - Installs all necessary dependencies
+   - Generates native iOS code using `expo prebuild`
+   - Installs CocoaPods dependencies
+   - Builds the app using `xcodebuild`
+   - Uploads the build as an artifact
 
-### How It Works
+3. **Downloading the Build**:
+   - Go to the "Actions" tab in the GitHub repository
+   - Select the most recent workflow run
+   - Scroll down to the "Artifacts" section
+   - Download the "ios-build" artifact
+   - Extract the .zip file to access the iOS app
 
-When you push code to the repository, GitHub Actions will:
+### Requirements
 
-1. Set up a macOS environment with Node.js 16
-2. Install project dependencies
-3. Install EAS CLI
-4. Configure Expo authentication with your token
-5. Build the IPA file using the "preview" profile in your eas.json
-6. Provide a build URL in the logs
+- A GitHub repository
+- An Expo token stored as a repository secret (EXPO_TOKEN)
+
+### Setup Instructions
+
+1. **Expo Token**:
+   - Visit [Expo Access Tokens](https://expo.dev/settings/access-tokens)
+   - Create a new token
+   - Go to your GitHub repository's Settings > Secrets > Actions
+   - Add a new repository secret named `EXPO_TOKEN` with the value of your Expo token
+
+2. **Trigger a Build**:
+   - Push to the repository to trigger the workflow automatically
+   - Monitor the build in the "Actions" tab
 
 ### Troubleshooting
 
 If you encounter build issues:
 
-1. Verify your EXPO_TOKEN is correctly set up in GitHub Secrets
-2. Make sure your eas.json file has a "preview" profile
-3. Check that your app.json is properly configured
-4. Review the full build logs in the GitHub Actions tab
+- Check that your Expo token is correctly set in the repository secrets
+- Ensure all necessary environment variables are properly configured
+- Review the workflow logs for any error messages
+- Verify that your app.json configuration is correct
 
-### Downloading Your IPA
+## Development
 
-1. After the build completes, go to the "Actions" tab in your GitHub repository
-2. Click on the completed workflow run
-3. Find the build URL in the logs
-4. Open the URL to download your IPA file from Expo
-
-## Local Development
-
-To run the app locally:
+To develop the app locally:
 
 ```bash
 # Install dependencies
 npm install
 
-# Start Expo development server
-npx expo start
+# Start the development server
+npm start
+
+# Open iOS simulator
+npm run ios
+
+# Open Android emulator
+npm run android
 ```
 
 ## Features
