@@ -14,7 +14,37 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar
+          
+      - name: Verify expo-router setup
+        run: |
+          # Check if babel.config.js exists, create if not
+          if [ ! -f babel.config.js ]; then
+            echo "module.exports = function (api) {
+              api.cache(true);
+              return {
+                presets: ['babel-preset-expo'],
+                plugins: ['expo-router/babel'],
+              };
+            };" > babel.config.js
+          fi
+
+          # Check if app.json exists, create if not
+          if [ ! -f app.json ]; then
+            echo '{
+              "expo": {
+                "scheme": "your-app-scheme",
+                "web": {
+                  "bundler": "metro"
+                },
+                "plugins": [
+                  "expo-router"
+                ]
+              }
+            }' > app.json
+          fi
           
       # Note: You need to set up EXPO_TOKEN in your repository secrets
       # Go to your GitHub repo -> Settings -> Secrets and Variables -> Actions -> New repository secret
@@ -33,6 +63,9 @@ jobs:
         run: |
           # The EXPO_TOKEN environment variable will be automatically used for authentication
           # No need for explicit login as EAS CLI will use the token automatically
+
+          # Configure EAS project if needed
+          npx eas-cli configure --platform ios
 
           # Build with preview profile
           eas build --platform ios --profile preview --non-interactive
