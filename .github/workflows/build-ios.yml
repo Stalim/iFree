@@ -20,19 +20,19 @@ jobs:
       # Go to your GitHub repo -> Settings -> Secrets and Variables -> Actions -> New repository secret
       # Name: EXPO_TOKEN
       # Value: Your Expo token (get it from https://expo.dev/settings/access-tokens)
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
+      - name: Install EAS CLI and polyfills
+        run: |
+          npm install -g eas-cli
+          npm install -g node-libs-browser
         
       # Set CI environment variable and use it for Expo login
       - name: Setup Expo and build
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: 1
         run: |
-          # Add Node.js global polyfills required by Expo
-          npm install -g node-libs-browser
-
-          # Store the token in eas.json credentials
-          eas credentials --non-interactive
+          # Login to Expo
+          echo $EXPO_TOKEN | eas login --non-interactive
 
           # Build with preview profile
           eas build --platform ios --profile preview --non-interactive
