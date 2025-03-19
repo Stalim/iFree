@@ -25,14 +25,14 @@ jobs:
           npm install -g eas-cli
           npm install -g node-libs-browser
         
-      # Set CI environment variable and use it for Expo login
+      # Set CI environment variable and use it for Expo build
       - name: Setup Expo and build
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: 1
         run: |
-          # Login to Expo
-          echo $EXPO_TOKEN | eas login --non-interactive
+          # The EXPO_TOKEN environment variable will be automatically used for authentication
+          # No need for explicit login as EAS CLI will use the token automatically
 
           # Build with preview profile
           eas build --platform ios --profile preview --non-interactive
