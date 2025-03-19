@@ -227,14 +227,15 @@ This repository is configured to build the iOS app automatically using GitHub Ac
    - Generates native iOS code using `expo prebuild`
    - Installs CocoaPods dependencies
    - Builds the app using `xcodebuild`
-   - Uploads the build as an artifact
+   - Creates a tarball (.tar.gz) of the build files
+   - Uploads the build using GitHub's REST API
 
 3. **Downloading the Build**:
    - Go to the "Actions" tab in the GitHub repository
    - Select the most recent workflow run
    - Scroll down to the "Artifacts" section
    - Download the "ios-build" artifact
-   - Extract the .zip file to access the iOS app
+   - Extract the .tar.gz file to access the iOS app
 
 ### Requirements
 
@@ -261,6 +262,8 @@ If you encounter build issues:
 - Ensure all necessary environment variables are properly configured
 - Review the workflow logs for any error messages
 - Verify that your app.json configuration is correct
+- Make sure the built files are properly listed in the "List built files in directory" step
+- If the artifact doesn't appear, check the output of the upload step for any errors
 
 ## Development
 
