@@ -133,15 +133,32 @@ jobs:
           xcodebuild -workspace iFree.xcworkspace -scheme iFree -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' EXCLUDED_ARCHS=arm64
           cd ..
           
-      - name: Archive and upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: ios-build
-          path: |
-            ios/build/Build/Products/Release-iphonesimulator
+      - name: Create artifact directory for direct upload
+        run: |
+          mkdir -p ios-build-artifacts
+          cp -R ios/build/Build/Products/Release-iphonesimulator ios-build-artifacts/
+          
+      - name: List built files in directory
+        run: |
+          ls -la ios-build-artifacts
+          ls -la ios-build-artifacts/Release-iphonesimulator || echo "Release-iphonesimulator directory not found"
+          
+      - name: Upload artifacts with archive
+        run: |
+          tar -czf ios-build.tar.gz -C ios-build-artifacts .
+          echo "::set-output name=archive_path::$(pwd)/ios-build.tar.gz"
+          
+      - name: Upload artifacts using GitHub REST API
+        run: |
+          GITHUB_API_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
+          curl -X POST -H "Authorization: token ${{ github.token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @"ios-build.tar.gz" \
+            "${GITHUB_API_URL}?name=ios-build"
             
       - name: Build Summary
         run: |
           echo "### iOS Build Complete! 🎉" >> $GITHUB_STEP_SUMMARY
-          echo "The build has been completed and uploaded as an artifact." >> $GITHUB_STEP_SUMMARY
+          echo "The build has been completed and should be available in the Artifacts section." >> $GITHUB_STEP_SUMMARY
           echo "To download, go to the Actions tab, select this workflow run, and download the ios-build artifact." >> $GITHUB_STEP_SUMMARY 
