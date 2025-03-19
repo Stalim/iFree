@@ -10,7 +10,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: 'npm'
           
       - name: Install dependencies
@@ -20,19 +20,22 @@ jobs:
       # Go to your GitHub repo -> Settings -> Secrets and Variables -> Actions -> New repository secret
       # Name: EXPO_TOKEN
       # Value: Your Expo token (get it from https://expo.dev/settings/access-tokens)
-      - name: Setup EAS
+      - name: Install EAS CLI
         run: npm install -g eas-cli
         
-      - name: Configure Expo
+      # Set CI environment variable and use it for Expo login
+      - name: Setup Expo and build
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          echo "EXPO_TOKEN=$EXPO_TOKEN" > .env
-          npx expo login --non-interactive
-        
-      # We're using the preview profile which already exists in eas.json
-      - name: Build IPA
-        run: npx eas-cli build --platform ios --profile preview --non-interactive
+          # Add Node.js global polyfills required by Expo
+          npm install -g node-libs-browser
+
+          # Store the token in eas.json credentials
+          eas credentials --non-interactive
+
+          # Build with preview profile
+          eas build --platform ios --profile preview --non-interactive
         
       - name: Get Build URL
         run: echo "Check the logs above for your build URL. Once the build completes, you can download the IPA from the Expo dashboard." 
