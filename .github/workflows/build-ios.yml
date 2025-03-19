@@ -83,12 +83,7 @@ jobs:
               },
               "plugins": [
                 "expo-router"
-              ],
-              "extra": {
-                "eas": {
-                  "projectId": "your-project-id"
-                }
-              }
+              ]
             }
           }' > app.json
 
@@ -101,9 +96,6 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: 1
         run: |
-          # Initialize EAS project
-          npx eas init --non-interactive
-
           # Build with preview profile
           npx eas build --platform ios --profile preview --non-interactive --no-wait
         
