@@ -96,6 +96,12 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: 1
         run: |
+          # Initialize EAS project with --non-interactive flag and force flag
+          yes | npx eas init --non-interactive --force
+
+          # Configure project
+          npx eas project:configure
+
           # Build with preview profile
           npx eas build --platform ios --profile preview --non-interactive --no-wait
         
