@@ -164,7 +164,40 @@ jobs:
         run: |
           # Build the iOS app
           cd ios
-          xcodebuild -workspace iFree.xcworkspace -scheme iFree -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' EXCLUDED_ARCHS=arm64
+          
+          echo "::group::Clean build directory"
+          rm -rf build/
+          mkdir -p build
+          echo "::endgroup::"
+          
+          echo "::group::Build for iOS Simulator"
+          set -o pipefail && xcodebuild \
+            -workspace iFree.xcworkspace \
+            -scheme iFree \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+            EXCLUDED_ARCHS=arm64 \
+            clean build \
+            | grep -v "warning: " \
+            | grep -v "note: " \
+            | grep -v "Pods-" \
+            | grep -v "node_modules" \
+            | grep -v "ld: warning" \
+            | grep -v "directory not found for option" \
+            | grep -v "ignoring file" \
+            | tee buildoutput.txt
+          
+          BUILD_EXIT_CODE=${PIPESTATUS[0]}
+          echo "::endgroup::"
+          
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "::error::Build failed with exit code $BUILD_EXIT_CODE"
+            echo "Last 50 lines of build output:"
+            tail -n 50 buildoutput.txt
+            exit $BUILD_EXIT_CODE
+          fi
+          
           cd ..
           
       - name: Create artifact directory for direct upload
